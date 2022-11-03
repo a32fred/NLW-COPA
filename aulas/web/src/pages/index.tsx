@@ -1,15 +1,20 @@
-// interface HomeProps{
-//   count: number;
-// }
+
 import Image from "next/image";
 import appPreviewImg from "../assets/app-nlw-copa-preview.png";
 import logImg from "../assets/logo.svg";
 import usersAvatarExempleImg from "../assets/users-avatar-example.png";
 import iconCheckImg from "../assets/icon-check.svg";
+import { api } from "../lib/axios";
+import { ApiError } from "next/dist/server/api-utils";
 
-export default function Home() {
+interface HomeProps{
+  poolCount: number,
+  guessCount: number
+}
+
+export default function Home(props: HomeProps) {
   return (
-    <div className="max-w-[1124px] h-screen mx-auto grid grid-cols-2 items-center">
+    <div className="max-w-[1124px] h-screen mx-auto grid grid-cols-2 gap-28 items-center">
       <main>
         <Image src={logImg} alt="NLW Copa" />
 
@@ -21,7 +26,7 @@ export default function Home() {
           <Image src={usersAvatarExempleImg} alt="" />
 
           <strong className="text-gray-100 text-xl">
-            <span className="text-ignite-500">+12.500</span> Pessoas ja estão
+            <span className="text-ignite-500">+1.200</span> Pessoas ja estão
             usando
           </strong>
         </div>
@@ -39,7 +44,7 @@ export default function Home() {
 
           <button 
 
-          className="bg-yellow-500 px-6 py-4 rounded" 
+          className="bg-yellow-500 px-6 py-4 rounded text-gray-900 font-bold text-sm uppercase hover:bg-yellow-700" 
           type="submit"
           
           >
@@ -49,21 +54,28 @@ export default function Home() {
 
         </form>
 
-        <p>
+        <p className="mt-4 text-sm text-gray-300 leading-relaxed">
           Após criar seu bolão, você receberá um código único que poderá usar
           para convidar outras pessoas
         </p>
 
-        <div>
-          <div>
+        <div className="mt-10 pt-10 border-t border-gray-600 divide-x flex items-center justify-between text-gray-100">
+          <div className="flex items-center gap-6">
             <Image src={iconCheckImg} alt="" />
-            <span>+2.000</span>
-            <span>Bolões Criados</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-2xl">+{props.poolCount}</span>
+              <span>Bolões Criados</span>
+            </div>
+
+          <div className="w-px h-14 bg-gray-600"/>
+
           </div>
-          <div>
+          <div className="flex items-center gap-6">
             <Image src={iconCheckImg} alt="" />
-            <span>+2.000</span>
-            <span>Bolões Criados</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-2xl">+{props.guessCount}</span>
+              <span>Palpites enviados</span>
+            </div>
           </div>
         </div>
       </main>
@@ -73,13 +85,14 @@ export default function Home() {
   );
 }
 
-// export const getServerSideProps = async ()=>{
-//   const response = await fetch('http://localhost:3333/pools/count')
-//   const data = await response.json()
+export const getServerSideProps =async () => {
+  const poolCountResponse = await api.get('/pools/count')
+  const guessCountResponse = await api.get('/guesses/count')
 
-//   return{
-//     props:{
-//       count: data.count,
-//     }
-//   }
-// }
+  return{
+    props:{
+      poolCount: poolCountResponse.data.count,
+      guessCount: guessCountResponse.data.count
+    }
+  }
+}
