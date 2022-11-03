@@ -40,6 +40,7 @@ async function bootstrap() {
   
         
     fastify.post('/pools', async (request, reply)=>{
+        
         const createPoolBody = z.object({
             title: z.string(),
         })
