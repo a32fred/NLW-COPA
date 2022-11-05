@@ -5,14 +5,42 @@ import logImg from "../assets/logo.svg";
 import usersAvatarExempleImg from "../assets/users-avatar-example.png";
 import iconCheckImg from "../assets/icon-check.svg";
 import { api } from "../lib/axios";
-import { ApiError } from "next/dist/server/api-utils";
+import { FormEvent, useState } from "react";
 
 interface HomeProps{
   poolCount: number,
-  guessCount: number
+  guessCount: number,
+  usersCount: number
+
 }
 
 export default function Home(props: HomeProps) {
+
+  const [poolTitle, setPoolTitle] = useState('')
+
+  const createPool = async (event: FormEvent)=>{
+    event.preventDefault()
+
+    try {
+      const response = await api.post('/pools', {
+        title: poolTitle
+      })
+
+      const {code} = response.data
+      await navigator.clipboard.writeText(code)
+
+      alert('Bolão criado, código copiado para sua área de transferência!!!')
+
+      setPoolTitle('')
+
+    } catch (err) {
+      console.log(err)
+      alert('erro interno, tente novamente mais tarde')
+
+    }
+  }
+
+
   return (
     <div className="max-w-[1124px] h-screen mx-auto grid grid-cols-2 gap-28 items-center">
       <main>
@@ -26,17 +54,19 @@ export default function Home(props: HomeProps) {
           <Image src={usersAvatarExempleImg} alt="" />
 
           <strong className="text-gray-100 text-xl">
-            <span className="text-ignite-500">+1.200</span> Pessoas ja estão
+            <span className="text-ignite-500">+{props.usersCount}</span> Pessoas ja estão
             usando
           </strong>
         </div>
 
-        <form className="mt-10 flex gap-2 ">
+        <form onSubmit={createPool} className="mt-10 flex gap-2 ">
 
           <input 
 
-          className="flex-1 px-6 py-4 rounded bg-gray-800 border-gray-600 text-sm" 
-          type="text" 
+          className="flex-1 px-6 py-4 rounded bg-gray-800 border border-gray-600 text-gray-300 text-sm" 
+          type="text"
+          onChange={event=>setPoolTitle(event.target.value)}
+          value={poolTitle} 
           required 
           placeholder="Qual nome do seu Bolão?" 
 
@@ -59,7 +89,7 @@ export default function Home(props: HomeProps) {
           para convidar outras pessoas
         </p>
 
-        <div className="mt-10 pt-10 border-t border-gray-600 divide-x flex items-center justify-between text-gray-100">
+        <div className="mt-10 pt-10 border-t border-gray-600 divide-x flex items-center text-gray-100">
           <div className="flex items-center gap-6">
             <Image src={iconCheckImg} alt="" />
             <div className="flex flex-col">
@@ -86,13 +116,25 @@ export default function Home(props: HomeProps) {
 }
 
 export const getServerSideProps =async () => {
-  const poolCountResponse = await api.get('/pools/count')
-  const guessCountResponse = await api.get('/guesses/count')
+
+  const [
+    poolCountResponse,
+    guessCountResponse,
+    usersCountResponse 
+
+    ]= await Promise.all([
+
+    api.get('/pools/count'),
+    api.get('/guesses/count'),
+    api.get('/users/count')
+
+  ])
 
   return{
     props:{
       poolCount: poolCountResponse.data.count,
-      guessCount: guessCountResponse.data.count
+      guessCount: guessCountResponse.data.count,
+      usersCount: usersCountResponse.data.count
     }
   }
 }
